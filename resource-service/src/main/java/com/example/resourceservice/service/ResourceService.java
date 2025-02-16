@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.ContentHandler;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 @Service
@@ -21,12 +22,12 @@ public class ResourceService {
     @Autowired
     private MetadataService metadataService;
 
-    public Long storeFile(MultipartFile file) throws Exception {
+    public Long storeFile(byte[] audioData) throws Exception {
         Resource resource = new Resource();
-        resource.setData(file.getBytes());
+        resource.setData(audioData);
         resource = resourceRepository.save(resource);
 
-        extractMetadata(file.getInputStream(), resource.getId());
+        extractMetadata(new ByteArrayInputStream(audioData), resource.getId());
         return resource.getId();
     }
 

@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -16,12 +18,18 @@ public class ResourceController {
     private ResourceService resourceService;
 
     @PostMapping(consumes = "audio/mpeg")
-    public ResponseEntity<Object> uploadResource(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Object> uploadResource(@RequestBody byte[] audioData) {
         try {
-            Long resourceId = resourceService.storeFile(file);
+            if (audioData == null || audioData.length == 0) {
+                return ResponseEntity.badRequest().body("{\"error\": \"File is empty\"}");
+            }
+
+            // Store the binary data
+            Long resourceId = resourceService.storeFile(audioData);
+
             return ResponseEntity.ok().body("{\"id\": " + resourceId + "}");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body("{\"error\": \"File upload failed\"}");
         }
     }
 
