@@ -1,0 +1,2 @@
+rootProject.name = 'music-services'
+include 'resource-service', 'song-service'
