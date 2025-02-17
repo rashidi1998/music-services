@@ -1,18 +1,28 @@
 package com.example.resourceservice.service;
 
 import com.example.resourceservice.entity.Resource;
+import com.example.resourceservice.exceptions.ResourceNotFoundException;
 import com.example.resourceservice.repository.ResourceRepository;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp3.Mp3Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.ContentHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ResourceService {
@@ -38,11 +48,41 @@ public class ResourceService {
         metadataService.save(resourceId, metadata);
     }
 
-    public byte[] getFile(Long id) throws Exception {
-        return resourceRepository.findById(id).orElseThrow().getData();
+    public byte[] getFile(Long id){
+        return resourceRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found")).getData();
     }
 
-    public void deleteFiles(Iterable<Long> ids) {
-        resourceRepository.deleteAllById(ids);
+    public void deleteFiles(String ids) {
+        if (ids.length() > 200) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "IDs parameter is too long. Max length is 200 characters.");
+        }
+
+        List<Long> idList;
+        try {
+            idList = Arrays.stream(ids.split(","))
+                    .map(String::trim)
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ID format. Please provide a comma-separated list of numeric IDs.", e);
+        }
+        List<Long> nonExistentIds = new ArrayList<>();
+
+
+        for (Long id : idList) {
+            if (!resourceRepository.existsById(id)) {
+                nonExistentIds.add(id);
+            } else {
+                resourceRepository.deleteById(id);
+                metadataService.deleteMetadata(Collections.singletonList(id));
+            }
+        }
+
+        if (!nonExistentIds.isEmpty()) {
+            throw new ResourceNotFoundException("Resources not found for IDs: " + nonExistentIds);
+        }
     }
+
 }
