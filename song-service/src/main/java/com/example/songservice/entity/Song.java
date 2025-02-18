@@ -23,7 +23,6 @@ public class Song {
 
     @Column(nullable = false)
     private String duration;
-    private String title;
 
     @Column(nullable = false)
     private String year;
@@ -76,7 +75,4 @@ public class Song {
         this.year = year;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
 }

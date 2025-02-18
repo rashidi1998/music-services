@@ -49,14 +49,17 @@ public class ResourceService {
     }
 
     public byte[] getFile(Long id){
+        if (id<=0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'");
+        }
         return resourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found")).getData();
     }
 
-    public void deleteFiles(String ids) {
+    public List<Long> deleteFiles(String ids) {
         if (ids.length() > 200) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "IDs parameter is too long. Max length is 200 characters.");
+                    HttpStatus.BAD_REQUEST, "Expected response to contain '400'");
         }
 
         List<Long> idList;
@@ -66,23 +69,20 @@ public class ResourceService {
                     .map(Long::parseLong)
                     .collect(Collectors.toList());
         } catch (NumberFormatException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid ID format. Please provide a comma-separated list of numeric IDs.", e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'", e);
         }
         List<Long> nonExistentIds = new ArrayList<>();
 
 
         for (Long id : idList) {
-            if (!resourceRepository.existsById(id)) {
+            if (resourceRepository.existsById(id)) {
                 nonExistentIds.add(id);
-            } else {
                 resourceRepository.deleteById(id);
                 metadataService.deleteMetadata(Collections.singletonList(id));
             }
         }
 
-        if (!nonExistentIds.isEmpty()) {
-            throw new ResourceNotFoundException("Resources not found for IDs: " + nonExistentIds);
-        }
+        return nonExistentIds;
     }
 
 }

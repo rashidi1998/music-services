@@ -32,3 +32,4 @@ tasks.named('test') {
 application {
     mainClassName = 'com.example.songservice.SongServiceApplication'
 }
+

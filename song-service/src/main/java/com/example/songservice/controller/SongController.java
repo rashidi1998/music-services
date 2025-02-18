@@ -1,6 +1,5 @@
 package com.example.songservice.controller;
 
-import com.example.songservice.entity.MetadataRequest;
 import com.example.songservice.entity.Song;
 import com.example.songservice.service.SongService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +35,6 @@ public class SongController {
         } List<Long> songIds = List.of(ids.split(",")).stream().map(Long::parseLong).toList();
 
         songIds.forEach(id -> songService.deleteSong(id));
-        return ResponseEntity.ok().build();
-    }
-
-    @PostMapping("/metadata")
-    public ResponseEntity<Void> saveMetadata(@RequestBody MetadataRequest metadataRequest) {
-        songService.saveMetadata(metadataRequest);
         return ResponseEntity.ok().build();
     }
 
