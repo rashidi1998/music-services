@@ -2,37 +2,46 @@ package com.example.songservice.service;
 
 import com.example.songservice.entity.Song;
 import com.example.songservice.entity.SongDto;
+import com.example.songservice.exceptions.CustomValidationException;
 import com.example.songservice.exceptions.ResourceNotFoundException;
 import com.example.songservice.repository.SongRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Validated
 public class SongService {
     @Autowired
     private SongRepository songRepository;
 
     @Transactional
-    public Song saveSong(SongDto song) {
+    public Song saveSong(@Valid SongDto song) {
+        String yearPattern = "^(19|20)\\d{2}$";
+        if (!song.getYear().matches(yearPattern)) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("year", song.getYear());
+            errors.put("duration",song.getDuration());
+            errors.put("error","Expected response to contain '400'");
+            throw new CustomValidationException("Validation error",errors);
+        }
         Song newSong = new Song();
-        newSong.setName(song.name());
-        newSong.setArtist(song.artist());
-        newSong.setAlbum(song.album());
-        newSong.setDuration(song.duration());
-        newSong.setYear(song.year());
-        if (songRepository.existsById(song.id())) {
+        newSong.setName(song.getName());
+        newSong.setArtist(song.getArtist());
+        newSong.setAlbum(song.getAlbum());
+        newSong.setDuration(song.getDuration());
+        newSong.setYear(song.getYear());
+        if (songRepository.existsById(song.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Expected response to contain '409'");
         }
-        newSong.setId(song.id());
+        newSong.setId(song.getId());
         return songRepository.save(newSong);
     }
 

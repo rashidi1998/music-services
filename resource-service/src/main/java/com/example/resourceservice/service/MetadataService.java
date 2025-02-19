@@ -57,6 +57,6 @@ public class MetadataService {
         }
     }
     public void deleteMetadata(List<Long> ids) {
-        restTemplate.delete(SONG_SERVICE_URL + "?ids=" + String.join(",", ids.stream().map(String::valueOf).toArray(String[]::new)))    ;
+        restTemplate.delete(SONG_SERVICE_URL + "?id=" + String.join(",", ids.stream().map(String::valueOf).toArray(String[]::new)))    ;
     }
 }

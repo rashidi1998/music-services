@@ -70,5 +70,9 @@ public class GlobalExceptionHandler {
         bodyOfResponse.put("error", "400 - Data integrity violation: " + ex.getMessage());
         return new ResponseEntity<>(bodyOfResponse, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(CustomValidationException.class)
+    public ResponseEntity<Object> handleCustomValidationException(CustomValidationException ex) {
+        return new ResponseEntity<>(ex.getErrors(), HttpStatus.BAD_REQUEST);
+    }
 
 }

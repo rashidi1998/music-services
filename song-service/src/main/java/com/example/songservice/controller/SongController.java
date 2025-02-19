@@ -20,7 +20,7 @@ public class SongController {
     private SongService songService;
 
     @PostMapping
-    public ResponseEntity<Song> createSong( @RequestBody @Validated SongDto song) {
+    public ResponseEntity<Song> createSong(@Valid @RequestBody SongDto song) {
         Song createdSong = songService.saveSong(song);
         return ResponseEntity.ok(createdSong);
     }
@@ -32,8 +32,8 @@ public class SongController {
 
     @DeleteMapping
     public ResponseEntity<Map<String, List<Long>>> deleteSongs(@RequestParam("id") String ids) {
-     List<Long> longList= songService.deleteSong(ids);
-     Map<String, List<Long>> response = Map.of("ids", longList);
+        List<Long> longList = songService.deleteSong(ids);
+        Map<String, List<Long>> response = Map.of("ids", longList);
         return ResponseEntity.ok().body(response);
     }
 }
