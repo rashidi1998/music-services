@@ -1,15 +1,13 @@
 package com.example.songservice.entity;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "songs")
 public class Song {
     @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(length = 100, nullable = false)
@@ -26,6 +24,8 @@ public class Song {
 
     @Column(nullable = false)
     private String year;
+    @Version
+    private int version;
 
     public Long getId() {
         return id;
@@ -75,4 +75,11 @@ public class Song {
         this.year = year;
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 }

@@ -12,6 +12,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.ContentHandler;
@@ -31,7 +32,6 @@ public class ResourceService {
     private ResourceRepository resourceRepository;
     @Autowired
     private MetadataService metadataService;
-
     public Long storeFile(byte[] audioData) throws Exception {
         Resource resource = new Resource();
         resource.setData(audioData);

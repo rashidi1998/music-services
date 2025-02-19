@@ -3,6 +3,7 @@ package com.example.resourceservice.service;
 import org.apache.tika.metadata.Metadata;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +16,7 @@ public class MetadataService {
     private RestTemplate restTemplate;
 
     private static final String SONG_SERVICE_URL = "http://localhost:8081/songs";
-
+    @Transactional
     public void save(Long resourceId, Metadata metadata) {
         Map<String, String> metadataMap = convertMetadataToMap(metadata);
 
@@ -27,7 +28,7 @@ public class MetadataService {
         songData.put("duration", metadataMap.get("xmpDM:duration"));
         songData.put("year", metadataMap.get("xmpDM:releaseDate"));
 
-        restTemplate.postForEntity(SONG_SERVICE_URL, songData, Void.class);
+        restTemplate.postForEntity(SONG_SERVICE_URL, songData, Object.class);
     }
 
 

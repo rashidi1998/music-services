@@ -1,10 +1,12 @@
 package com.example.songservice.controller;
 
 import com.example.songservice.entity.Song;
+import com.example.songservice.entity.SongDto;
 import com.example.songservice.service.SongService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,7 +20,7 @@ public class SongController {
     private SongService songService;
 
     @PostMapping
-    public ResponseEntity<Song> createSong(@RequestBody Song song) {
+    public ResponseEntity<Song> createSong(@Validated @RequestBody SongDto song) {
         Song createdSong = songService.saveSong(song);
         return ResponseEntity.ok(createdSong);
     }
