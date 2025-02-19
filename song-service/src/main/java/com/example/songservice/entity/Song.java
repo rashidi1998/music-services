@@ -2,6 +2,7 @@ package com.example.songservice.entity;
 
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "songs")
@@ -24,8 +25,7 @@ public class Song {
 
     @Column(nullable = false)
     private String year;
-    @Version
-    private int version;
+
 
     public Long getId() {
         return id;
@@ -75,11 +75,5 @@ public class Song {
         this.year = year;
     }
 
-    public int getVersion() {
-        return version;
-    }
 
-    public void setVersion(int version) {
-        this.version = version;
-    }
 }

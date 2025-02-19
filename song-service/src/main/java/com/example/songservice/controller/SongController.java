@@ -3,14 +3,14 @@ package com.example.songservice.controller;
 import com.example.songservice.entity.Song;
 import com.example.songservice.entity.SongDto;
 import com.example.songservice.service.SongService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/songs")
@@ -20,7 +20,7 @@ public class SongController {
     private SongService songService;
 
     @PostMapping
-    public ResponseEntity<Song> createSong(@Validated @RequestBody SongDto song) {
+    public ResponseEntity<Song> createSong( @RequestBody @Validated SongDto song) {
         Song createdSong = songService.saveSong(song);
         return ResponseEntity.ok(createdSong);
     }
@@ -31,13 +31,9 @@ public class SongController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteSongs(@RequestParam("ids") String ids) {
-        if (ids.length() > 200) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "IDs parameter is too long. Max length is 200 characters.");
-        } List<Long> songIds = List.of(ids.split(",")).stream().map(Long::parseLong).toList();
-
-        songIds.forEach(id -> songService.deleteSong(id));
-        return ResponseEntity.ok().build();
+    public ResponseEntity<Map<String, List<Long>>> deleteSongs(@RequestParam("id") String ids) {
+     List<Long> longList= songService.deleteSong(ids);
+     Map<String, List<Long>> response = Map.of("ids", longList);
+        return ResponseEntity.ok().body(response);
     }
-
 }
