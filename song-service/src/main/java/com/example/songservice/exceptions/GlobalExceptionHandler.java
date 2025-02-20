@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> response = new HashMap<>();
         response.put("errorMessage", "Validation error");
         response.put("details", errors);
-        response.put("errorCode", "400");
+        response.put("errorCode", 400);
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

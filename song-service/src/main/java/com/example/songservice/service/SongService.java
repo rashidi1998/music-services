@@ -24,14 +24,6 @@ public class SongService {
 
     @Transactional
     public Song saveSong(@Valid SongDto song) {
-        String yearPattern = "^(19|20)\\d{2}$";
-        if (!song.getYear().matches(yearPattern)) {
-            Map<String, String> errors = new HashMap<>();
-            errors.put("year", song.getYear());
-            errors.put("duration",song.getDuration());
-            errors.put("error","Expected response to contain '400'");
-            throw new CustomValidationException("Validation error",errors);
-        }
         Song newSong = new Song();
         newSong.setName(song.getName());
         newSong.setArtist(song.getArtist());
