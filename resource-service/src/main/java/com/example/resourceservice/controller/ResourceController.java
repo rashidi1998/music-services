@@ -20,20 +20,17 @@ public class ResourceController {
     @Autowired
     private ResourceService resourceService;
 
-    @PostMapping(consumes = "audio/mpeg",produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> uploadResource(@RequestBody byte[] audioData) {
+    @PostMapping(consumes = "audio/mpeg", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> uploadResource(@RequestBody(required = false) byte[] audioData) {
         try {
-            if (audioData == null || audioData.length == 0) {
-                return ResponseEntity.badRequest().body("{\"error\": \"File is empty\"}");
-            }
-
             Long resourceId = resourceService.storeFile(audioData);
-
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body("{\"id\": " + resourceId + "}");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("{\"error\": \"File upload failed\"}");
+            return ResponseEntity.internalServerError().body("{\"error\": \"File upload failed: " + e.getMessage() + "\"}");
         }
     }
 

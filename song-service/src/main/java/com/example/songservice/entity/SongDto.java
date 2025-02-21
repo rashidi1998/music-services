@@ -2,17 +2,21 @@ package com.example.songservice.entity;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public class SongDto {
     private Long id;
 
     @NotEmpty(message = "Name is required")
+    @Size(max = 100, message = "Name must be less than 100 characters")
     private String name;
 
     @NotEmpty(message = "Artist is required")
+    @Size(max = 100, message = "Artist must be less than 100 characters")
     private String artist;
 
     @NotEmpty(message = "Album is required")
+    @Size(max = 100, message = "Album must be less than 100 characters")
     private String album;
 
     @NotEmpty(message = "Duration is required")

@@ -6,7 +6,6 @@ import com.example.songservice.service.SongService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +31,7 @@ public class SongController {
 
     @DeleteMapping
     public ResponseEntity<Map<String, List<Long>>> deleteSongs(@RequestParam("id") String ids) {
-        List<Long> longList = songService.deleteSong(ids);
+        List<Long> longList = songService.deleteSongs(ids);
         Map<String, List<Long>> response = Map.of("ids", longList);
         return ResponseEntity.ok().body(response);
     }

@@ -1,6 +1,7 @@
 package com.example.resourceservice.service;
 
 import com.example.resourceservice.entity.Resource;
+import com.example.resourceservice.exceptions.CustomValidationException;
 import com.example.resourceservice.exceptions.ResourceNotFoundException;
 import com.example.resourceservice.repository.ResourceRepository;
 import org.apache.tika.metadata.Metadata;
@@ -32,12 +33,22 @@ public class ResourceService {
     private ResourceRepository resourceRepository;
     @Autowired
     private MetadataService metadataService;
+    @Transactional
     public Long storeFile(byte[] audioData) throws Exception {
+        if (audioData == null || audioData.length == 0) {
+            throw new IllegalArgumentException("File is empty");
+        }
+
         Resource resource = new Resource();
         resource.setData(audioData);
         resource = resourceRepository.save(resource);
 
-        extractMetadata(new ByteArrayInputStream(audioData), resource.getId());
+        try {
+            extractMetadata(new ByteArrayInputStream(audioData), resource.getId());
+        } catch (Exception e) {
+            throw new Exception("Failed to extract metadata", e);
+        }
+
         return resource.getId();
     }
 
@@ -50,7 +61,8 @@ public class ResourceService {
 
     public byte[] getFile(Long id){
         if (id<=0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'");
+           throw new CustomValidationException("Validation error",
+                   Collections.singletonMap("ID", "ID must be a positive number."));
         }
         return resourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found")).getData();
@@ -58,31 +70,40 @@ public class ResourceService {
 
     public List<Long> deleteFiles(String ids) {
         if (ids.length() > 200) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "Expected response to contain '400'");
+            throw new CustomValidationException("Validation error",
+                    Collections.singletonMap("IDs", "The length of the ID list must not exceed 200 characters."));
         }
 
         List<Long> idList;
         try {
             idList = Arrays.stream(ids.split(","))
                     .map(String::trim)
+                    .filter(s -> !s.isEmpty())
                     .map(Long::parseLong)
                     .collect(Collectors.toList());
         } catch (NumberFormatException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'", e);
+            throw new CustomValidationException("Validation error",
+                    Collections.singletonMap("IDs", "IDs must be a comma-separated list of numbers."));
         }
-        List<Long> nonExistentIds = new ArrayList<>();
 
+        List<Long> nonExistentIds = new ArrayList<>();
+        List<Long> deletedIds = new ArrayList<>();
 
         for (Long id : idList) {
-            if (resourceRepository.existsById(id)) {
+            if (!resourceRepository.existsById(id)) {
                 nonExistentIds.add(id);
+            } else {
                 resourceRepository.deleteById(id);
                 metadataService.deleteMetadata(Collections.singletonList(id));
+                deletedIds.add(id);
             }
         }
 
-        return nonExistentIds;
+        if (!nonExistentIds.isEmpty()) {
+            System.out.println("Non-existent IDs: " + nonExistentIds);
+        }
+
+        return deletedIds;
     }
 
 }

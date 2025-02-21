@@ -74,8 +74,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex, WebRequest request) {
         Map<String, String> bodyOfResponse = new HashMap<>();
-        bodyOfResponse.put("error", "400 - Data integrity violation: " + ex.getMessage());
+        bodyOfResponse.put("error", " validation error: " + ex.getMessage());
         return new ResponseEntity<>(bodyOfResponse, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(CustomValidationException.class)
+    public ResponseEntity<Object> handleCustomValidationException(CustomValidationException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("errorMessage", ex.getMessage());
+        response.put("details", ex.getErrors());
+        response.put("errorCode", 400);
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+    @ExceptionHandler(CustomConflictException.class)
+    public ResponseEntity<Object> handleCustomConflictException(CustomConflictException ex) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("errorMessage", ex.getMessage());
+        response.put("errorCode", 409);
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
 }

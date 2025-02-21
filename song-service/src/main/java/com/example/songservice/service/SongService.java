@@ -2,18 +2,20 @@ package com.example.songservice.service;
 
 import com.example.songservice.entity.Song;
 import com.example.songservice.entity.SongDto;
+import com.example.songservice.exceptions.CustomConflictException;
 import com.example.songservice.exceptions.CustomValidationException;
 import com.example.songservice.exceptions.ResourceNotFoundException;
 import com.example.songservice.repository.SongRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,44 +26,69 @@ public class SongService {
 
     @Transactional
     public Song saveSong(@Valid SongDto song) {
-        Song newSong = new Song();
-        newSong.setName(song.getName());
-        newSong.setArtist(song.getArtist());
-        newSong.setAlbum(song.getAlbum());
-        newSong.setDuration(song.getDuration());
-        newSong.setYear(song.getYear());
         if (songRepository.existsById(song.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Expected response to contain '409'");
+            throw new CustomConflictException("Song with ID=" + song.getId() + " already exists.");
         }
-        newSong.setId(song.getId());
-        return songRepository.save(newSong);
+        Song songEntity = convertToEntity(song);
+        return songRepository.save(songEntity);
+    }
+
+    private Song convertToEntity(SongDto songDto) {
+        Song song = new Song();
+        song.setId(songDto.getId());
+        song.setName(songDto.getName());
+        song.setArtist(songDto.getArtist());
+        song.setAlbum(songDto.getAlbum());
+        song.setDuration(songDto.getDuration());
+        song.setYear(songDto.getYear());
+        return song;
     }
 
     public Optional<Song> findSongById(Long id) {
-        return Optional.ofNullable(songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found")));
+        return Optional.ofNullable(songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Song with ID=" + id + " not found")));
     }
 
-    public List<Long> deleteSong(String ids) {
+    public List<Long> deleteSongs(String ids) {
         if (ids.length() > 200) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'");
+            throw new CustomValidationException("Validation error",
+                    Map.of("ID", "The length of the ID list must not exceed 200 characters."));
         }
-        List<Long> songIds = new ArrayList<>();
-        try {
-            songIds = Arrays.stream(ids.split(","))
-                    .map(String::trim)
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-        } catch (NumberFormatException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Expected response to contain '400'", e);
-        }
-        List<Long> nonExistentIds = new ArrayList<>();
-        for (Long id : songIds) {
-            if (songRepository.existsById(id)) {
-                nonExistentIds.add(id);
-                songRepository.deleteById(id);
+
+        List<Long> parsedIds = new ArrayList<>();
+        List<Long> deletedIds = new ArrayList<>();
+        List<String> invalidIds = new ArrayList<>();
+
+        String[] splitIds = ids.split(",");
+        for (String id : splitIds) {
+            id = id.trim();
+            if (!id.isEmpty()) {
+                try {
+                    Long parsedId = Long.parseLong(id);
+                    parsedIds.add(parsedId);
+                } catch (NumberFormatException e) {
+                    invalidIds.add(id);
+                }
             }
         }
-       return nonExistentIds;
 
+        if (!invalidIds.isEmpty()) {
+            Map<String, String> errorDetails = invalidIds.stream()
+                    .collect(Collectors.toMap(
+                            id -> "ID",
+                            id -> "ID: " + id + " is not valid."
+                    ));
+            throw new CustomValidationException("Invalid IDs provided: " + String.join(", ", invalidIds), errorDetails);
+        }
+
+        for (Long id : parsedIds) {
+            if (songRepository.existsById(id)) {
+                songRepository.deleteById(id);
+                deletedIds.add(id);
+            }
+        }
+
+        return deletedIds;
     }
+
+
 }
