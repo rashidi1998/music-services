@@ -2,6 +2,7 @@ package com.example.songservice.controller;
 
 import com.example.songservice.entity.Song;
 import com.example.songservice.entity.SongDto;
+import com.example.songservice.exceptions.ResourceNotFoundException;
 import com.example.songservice.service.SongService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,20 +20,18 @@ public class SongController {
     private SongService songService;
 
     @PostMapping
-    public ResponseEntity<Song> createSong(@Valid @RequestBody SongDto song) {
-        Song createdSong = songService.saveSong(song);
-        return ResponseEntity.ok(createdSong);
+    public ResponseEntity<SongDto> createSong(@Valid @RequestBody SongDto songDto) {
+        return ResponseEntity.ok( songService.saveSong(songDto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Song> getSongById(@PathVariable Long id) {
-        return songService.findSongById(id).map(song -> ResponseEntity.ok(song)).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<SongDto> getSongById(@PathVariable Long id) {
+        SongDto songDto = songService.findSongById(id);
+        return ResponseEntity.ok(songDto);
     }
 
     @DeleteMapping
     public ResponseEntity<Map<String, List<Long>>> deleteSongs(@RequestParam("id") String ids) {
-        List<Long> longList = songService.deleteSongs(ids);
-        Map<String, List<Long>> response = Map.of("ids", longList);
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(songService.deleteSongs(ids));
     }
 }

@@ -2,6 +2,8 @@ package com.example.resourceservice.service;
 
 import com.example.resourceservice.entity.Resource;
 import com.example.resourceservice.exceptions.CustomValidationException;
+import com.example.resourceservice.exceptions.EmptyFileException;
+import com.example.resourceservice.exceptions.MetadataExtractException;
 import com.example.resourceservice.exceptions.ResourceNotFoundException;
 import com.example.resourceservice.repository.ResourceRepository;
 import org.apache.tika.metadata.Metadata;
@@ -9,21 +11,13 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.mp3.Mp3Parser;
 import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.ContentHandler;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,10 +27,11 @@ public class ResourceService {
     private ResourceRepository resourceRepository;
     @Autowired
     private MetadataService metadataService;
+
     @Transactional
-    public Long storeFile(byte[] audioData) throws Exception {
+    public Long storeFile(byte[] audioData) throws EmptyFileException, MetadataExtractException {
         if (audioData == null || audioData.length == 0) {
-            throw new IllegalArgumentException("File is empty");
+            throw new EmptyFileException("File is empty");
         }
 
         Resource resource = new Resource();
@@ -46,11 +41,12 @@ public class ResourceService {
         try {
             extractMetadata(new ByteArrayInputStream(audioData), resource.getId());
         } catch (Exception e) {
-            throw new Exception("Failed to extract metadata", e);
+            throw new MetadataExtractException("Failed to extract metadata", e);
         }
 
         return resource.getId();
     }
+
 
     private void extractMetadata(InputStream inputStream, Long resourceId) throws Exception {
         ContentHandler handler = new BodyContentHandler();
@@ -59,16 +55,16 @@ public class ResourceService {
         metadataService.save(resourceId, metadata);
     }
 
-    public byte[] getFile(Long id){
-        if (id<=0){
-           throw new CustomValidationException("Validation error",
-                   Collections.singletonMap("ID", "ID must be a positive number."));
+    public byte[] getFile(Long id) {
+        if (id <= 0) {
+            throw new CustomValidationException("Validation error",
+                    Collections.singletonMap("ID", "ID must be a positive number."));
         }
         return resourceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Resource with ID=" + id + " not found")).getData();
     }
 
-    public List<Long> deleteFiles(String ids) {
+    public Map<String, List<Long>> deleteFiles(String ids) {
         if (ids.length() > 200) {
             throw new CustomValidationException("Validation error",
                     Collections.singletonMap("IDs", "The length of the ID list must not exceed 200 characters."));
@@ -103,7 +99,7 @@ public class ResourceService {
             System.out.println("Non-existent IDs: " + nonExistentIds);
         }
 
-        return deletedIds;
+        return Map.of("ids", deletedIds);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.example.resourceservice.exceptions;
 
+import com.example.resourceservice.entity.response.ErrorResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -91,6 +92,15 @@ public class GlobalExceptionHandler {
         response.put("errorMessage", ex.getMessage());
         response.put("errorCode", 409);
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
+    @ExceptionHandler(EmptyFileException.class)
+    public ResponseEntity<Object> handleEmptyFileException(EmptyFileException ex) {
+        return ResponseEntity.badRequest().body(new ErrorResponse("File is empty", ex.getMessage()));
+    }
+
+    @ExceptionHandler(MetadataExtractException.class)
+    public ResponseEntity<Object> handleMetadataExtractionException(MetadataExtractException ex) {
+        return ResponseEntity.internalServerError().body(new ErrorResponse("Metadata extraction failed", ex.getLocalizedMessage()));
     }
 
 }

@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,12 +24,12 @@ public class SongService {
     private SongRepository songRepository;
 
     @Transactional
-    public Song saveSong(@Valid SongDto song) {
+    public SongDto saveSong(@Valid SongDto song) {
         if (songRepository.existsById(song.getId())) {
             throw new CustomConflictException("Song with ID=" + song.getId() + " already exists.");
         }
         Song songEntity = convertToEntity(song);
-        return songRepository.save(songEntity);
+        return convertToDto(songRepository.save(songEntity));
     }
 
     private Song convertToEntity(SongDto songDto) {
@@ -44,11 +43,13 @@ public class SongService {
         return song;
     }
 
-    public Optional<Song> findSongById(Long id) {
-        return Optional.ofNullable(songRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Song with ID=" + id + " not found")));
+    public SongDto findSongById(Long id) {
+        Song song = songRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Song with ID=" + id + " not found"));
+        return convertToDto(song);
     }
 
-    public List<Long> deleteSongs(String ids) {
+    public Map<String, List<Long>> deleteSongs(String ids) {
         if (ids.length() > 200) {
             throw new CustomValidationException("Validation error",
                     Map.of("ID", "The length of the ID list must not exceed 200 characters."));
@@ -87,8 +88,18 @@ public class SongService {
             }
         }
 
-        return deletedIds;
+        return Map.of("ids", deletedIds);
     }
 
 
+    public SongDto convertToDto(Song createdSong) {
+        SongDto songDto = new SongDto();
+        songDto.setId(createdSong.getId());
+        songDto.setName(createdSong.getName());
+        songDto.setArtist(createdSong.getArtist());
+        songDto.setAlbum(createdSong.getAlbum());
+        songDto.setDuration(createdSong.getDuration());
+        songDto.setYear(createdSong.getYear());
+        return songDto;
+    }
 }
