@@ -2,6 +2,7 @@ package com.example.resourceservice.service;
 
 import org.apache.tika.metadata.Metadata;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -14,8 +15,8 @@ public class MetadataService {
 
     @Autowired
     private RestTemplate restTemplate;
-
-    private static final String SONG_SERVICE_URL = "http://localhost:8081/songs";
+    @Value("${song.service.url: http://localhost:8081/songs}")
+    private  String SONG_SERVICE_URL;
     @Transactional
     public void save(Long resourceId, Metadata metadata) {
         Map<String, String> metadataMap = convertMetadataToMap(metadata);
