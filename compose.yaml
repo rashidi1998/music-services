@@ -33,7 +33,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://resource-db:5432/resource-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SONG_SERVICE_URL: http://song-service:8081/songs
     depends_on:
       - resource-db
@@ -48,7 +48,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-db:5432/song-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
     depends_on:
       - song-db
 
