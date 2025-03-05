@@ -27,14 +27,18 @@ services:
     build:
       context: .
       dockerfile: resource-service/Dockerfile
+    deploy:
+        replicas: 2
     ports:
-      - "8080:8080"
+      - "8080-8083:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://resource-db:5432/resource-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SONG_SERVICE_URL: http://song-service:8081/songs
+      EUREKA_URI: http://eureka-service:8761/eureka
+      EUREKA_PREFER_IP_ADDRESS: true
     depends_on:
       - resource-db
 
@@ -42,15 +46,36 @@ services:
     build:
       context: .
       dockerfile: song-service/Dockerfile
+    deploy:
+      replicas: 2
     ports:
-      - "8081:8081"
+      - "8081-8085:8081"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://song-db:5432/song-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      EUREKA_URI: http://eureka-service:8761/eureka
+      EUREKA_PREFER_IP_ADDRESS: true
     depends_on:
       - song-db
+
+  eureka-service:
+    build:
+      context: .
+      dockerfile: eureka-service/Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_CLIENT_REGISTER_WITH_EUREKA: "false"
+      EUREKA_CLIENT_FETCH_REGISTRY: "false"
+      EUREKA_SERVER_WAIT_TIME_IN_MS_WHEN_SYNC_EMPTY: "0"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      retries: 5
+      start_period: 15s
+      timeout: 5s
 
 # Volumes are declared if you need to persist data beyond container lifetimes, or to use the database init scripts.
 volumes:
