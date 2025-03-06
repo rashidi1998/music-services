@@ -15,9 +15,10 @@ RUN chmod +x ../gradlew && \
 
 FROM eclipse-temurin:17-jre
 WORKDIR /app
+RUN mkdir -p /logs
 
 COPY --from=build /app/song-service/build/libs/*.jar app.jar
 
 EXPOSE 8081
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar", "--logging.file=/logs/song-service.log"]
